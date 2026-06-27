@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>MacroSnap</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --card-2: #21252e;
+    --text: #f2f4f8;
+    --muted: #8b93a3;
+    --line: #2b303b;
+    --accent: #5b8cff;
+    --cal: #ffb454;
+    --pro: #4ad6a0;
+    --carb: #ff7a9c;
+    --fat: #c08bff;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { max-width: 520px; margin: 0 auto; padding: 16px 16px 120px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .iconbtn { background: var(--card); border: 1px solid var(--line); color: var(--text);
+    width: 40px; height: 40px; border-radius: 12px; font-size: 18px; cursor: pointer; }
+
+  .totals { background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 16px; margin-bottom: 16px; }
+  .totals h2 { margin: 0 0 12px; font-size: 13px; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px; }
+  .macrorow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .macro { text-align: center; }
+  .macro .val { font-size: 20px; font-weight: 800; }
+  .macro .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .macro.cal .val { color: var(--cal); }
+  .macro.pro .val { color: var(--pro); }
+  .macro.carb .val { color: var(--carb); }
+  .macro.fat .val { color: var(--fat); }
+  .goal { font-size: 10px; color: var(--muted); }
+
+  .snapbtn { width: 100%; background: var(--accent); color: #fff; border: none;
+    padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer;
+    margin-bottom: 18px; }
+  .snapbtn:active { opacity: 0.85; }
+
+  .log h2 { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; margin: 0 0 10px; }
+  .entry { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .entry .name { font-weight: 700; font-size: 15px; }
+  .entry .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .entry .macros { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .entry .cal { font-size: 17px; font-weight: 800; color: var(--cal); white-space: nowrap; }
+  .entry .del { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; margin-left: 6px; }
+  .empty { color: var(--muted); text-align: center; padding: 30px 10px; font-size: 14px; }
+  .pill { display: inline-block; background: var(--card-2); color: var(--pro);
+    font-size: 10px; padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+
+  /* bottom sheet */
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; pointer-events: none;
+    transition: opacity 0.25s; z-index: 10; }
+  .backdrop.open { opacity: 1; pointer-events: auto; }
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card);
+    border-radius: 22px 22px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+    max-width: 520px; margin: 0 auto; transform: translateY(100%); transition: transform 0.28s ease;
+    z-index: 11; max-height: 92vh; overflow-y: auto; }
+  .sheet.open { transform: translateY(0); }
+  .grab { width: 40px; height: 4px; background: var(--line); border-radius: 999px; margin: 0 auto 14px; }
+  .sheet h3 { margin: 0 0 14px; font-size: 18px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+  input, textarea {
+    width: 100%; background: var(--card-2); border: 1px solid var(--line); color: var(--text);
+    padding: 12px; border-radius: 12px; font-size: 16px; font-family: inherit; }
+  textarea { resize: none; min-height: 60px; }
+  .preview { width: 100%; border-radius: 14px; margin: 4px 0 8px; max-height: 230px; object-fit: cover; }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .primary { width: 100%; background: var(--accent); color: #fff; border: none; padding: 14px;
+    border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 16px; }
+  .primary:disabled { opacity: 0.5; }
+  .ghost { width: 100%; background: var(--card-2); color: var(--text); border: 1px solid var(--line);
+    padding: 12px; border-radius: 12px; font-size: 14px; cursor: pointer; margin-top: 8px; }
+  .error { color: var(--carb); font-size: 13px; margin-top: 10px; min-height: 16px; }
+  .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff;
+    border-top-color: transparent; border-radius: 50%; animation: s 0.7s linear infinite; vertical-align: -3px; margin-right: 8px; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">Macro<span>Snap</span></div>
+    <button class="iconbtn" id="settingsBtn">&#9881;</button>
+  </header>
+
+  <div class="totals">
+    <h2>Today</h2>
+    <div class="macrorow">
+      <div class="macro cal"><div class="val" id="tCal">0</div><div class="lbl">Calories</div><div class="goal" id="gCal"></div></div>
+      <div class="macro pro"><div class="val" id="tPro">0</div><div class="lbl">Protein</div><div class="goal" id="gPro"></div></div>
+      <div class="macro carb"><div class="val" id="tCarb">0</div><div class="lbl">Carbs</div><div class="goal" id="gCarb"></div></div>
+      <div class="macro fat"><div class="val" id="tFat">0</div><div class="lbl">Fat</div><div class="goal" id="gFat"></div></div>
+    </div>
+  </div>
+
+  <button class="snapbtn" id="snapBtn">&#128247; Snap a meal</button>
+
+  <div class="log">
+    <h2>Log</h2>
+    <div id="logList"></div>
+  </div>
+
+  <!-- Snap sheet -->
+  <div class="backdrop" id="backdrop"></div>
+  <div class="sheet" id="snapSheet">
+    <div class="grab"></div>
+    <h3>Add a meal</h3>
+    <input type="file" accept="image/*" capture="environment" id="fileInput" style="display:none" />
+    <div id="picArea">
+      <button class="ghost" id="pickBtn">&#128247; Take / choose photo</button>
+    </div>
+    <img class="preview" id="preview" style="display:none" />
+    <button class="ghost" id="retakeBtn" style="display:none">Retake</button>
+
+    <label>Grams <span style="color:var(--muted)">(optional — leave blank if a scale is in the photo)</span></label>
+    <input type="number" id="weightInput" inputmode="decimal" placeholder="e.g. 150" />
+    <div class="hint">If your plate sits on a kitchen scale, MacroSnap will read the weight off the display.</div>
+
+    <label>Meal name</label>
+    <input type="text" id="nameInput" placeholder="Breakfast" />
+
+    <label>Extra details (optional)</label>
+    <textarea id="extraInput" placeholder="e.g. grilled, no oil, with skin"></textarea>
+
+    <div class="error" id="snapError"></div>
+    <button class="primary" id="analyzeBtn" disabled>Analyze</button>
+  </div>
+
+  <!-- Settings sheet -->
+  <div class="backdrop" id="backdrop2"></div>
+  <div class="sheet" id="settingsSheet">
+    <div class="grab"></div>
+    <h3>Daily goals</h3>
+    <div class="row2">
+      <div><label>Calories</label><input type="number" id="goalCal" placeholder="2000" /></div>
+      <div><label>Protein (g)</label><input type="number" id="goalPro" placeholder="150" /></div>
+    </div>
+    <div class="row2">
+      <div><label>Carbs (g)</label><input type="number" id="goalCarb" placeholder="200" /></div>
+      <div><label>Fat (g)</label><input type="number" id="goalFat" placeholder="65" /></div>
+    </div>
+    <button class="primary" id="saveSettings">Save</button>
+    <button class="ghost" id="clearLog">Clear today's log</button>
+  </div>
+
+<script>
+  // ---- simple in-memory + localStorage state ----
+  var state = {
+    log: JSON.parse(localStorage.getItem('ms_log') || '[]'),
+    goals: JSON.parse(localStorage.getItem('ms_goals') || '{}'),
+    day: localStorage.getItem('ms_day') || ''
+  };
+
+  var today = new Date().toISOString().slice(0,10);
+  if (state.day !== today) { state.log = []; state.day = today; persist(); }
+
+  function persist() {
+    localStorage.setItem('ms_log', JSON.stringify(state.log));
+    localStorage.setItem('ms_goals', JSON.stringify(state.goals));
+    localStorage.setItem('ms_day', today);
+  }
+
+  function round(n){ return Math.round(n*10)/10; }
+
+  function render() {
+    var t = {cal:0, pro:0, carb:0, fat:0};
+    state.log.forEach(function(e){
+      t.cal += e.calories; t.pro += e.protein_g; t.carb += e.carbs_g; t.fat += e.fat_g;
+    });
+    document.getElementById('tCal').textContent = Math.round(t.cal);
+    document.getElementById('tPro').textContent = round(t.pro)+'g';
+    document.getElementById('tCarb').textContent = round(t.carb)+'g';
+    document.getElementById('tFat').textContent = round(t.fat)+'g';
+
+    var g = state.goals;
+    document.getElementById('gCal').textContent  = g.cal  ? '/ '+g.cal  : '';
+    document.getElementById('gPro').textContent  = g.pro  ? '/ '+g.pro+'g'  : '';
+    document.getElementById('gCarb').textContent = g.carb ? '/ '+g.carb+'g' : '';
+    document.getElementById('gFat').textContent  = g.fat  ? '/ '+g.fat+'g'  : '';
+
+    var list = document.getElementById('logList');
+    if (!state.log.length) {
+      list.innerHTML = '<div class="empty">No meals logged yet today.<br>Tap “Snap a meal” to start.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    state.log.forEach(function(e, i){
+      var div = document.createElement('div');
+      div.className = 'entry';
+      var scalePill = e.scale_read ? '<span class="pill">scale</span>' : '';
+      div.innerHTML =
+        '<div>' +
+          '<div class="name">'+ escapeHtml(e.name || e.food) + scalePill +'</div>' +
+          '<div class="sub">'+ escapeHtml(e.food) +' · '+ Math.round(e.weight_g) +'g</div>' +
+          '<div class="macros">P '+round(e.protein_g)+'g · C '+round(e.carbs_g)+'g · F '+round(e.fat_g)+'g</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center">' +
+          '<div class="cal">'+ Math.round(e.calories) +'</div>' +
+          '<button class="del" data-i="'+i+'">&times;</button>' +
+        '</div>';
+      list.appendChild(div);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.del'), function(b){
+      b.onclick = function(){ state.log.splice(+b.dataset.i,1); persist(); render(); };
+    });
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  // ---- sheet open/close ----
+  function openSheet(sheet, bd){ sheet.classList.add('open'); bd.classList.add('open'); }
+  function closeSheet(sheet, bd){ sheet.classList.remove('open'); bd.classList.remove('open'); }
+
+  var snapSheet = document.getElementById('snapSheet');
+  var settingsSheet = document.getElementById('settingsSheet');
+  var bd = document.getElementById('backdrop');
+  var bd2 = document.getElementById('backdrop2');
+
+  document.getElementById('snapBtn').onclick = function(){ resetSnap(); openSheet(snapSheet, bd); };
+  bd.onclick = function(){ closeSheet(snapSheet, bd); };
+  document.getElementById('settingsBtn').onclick = function(){
+    var g = state.goals;
+    document.getElementById('goalCal').value = g.cal||'';
+    document.getElementById('goalPro').value = g.pro||'';
+    document.getElementById('goalCarb').value = g.carb||'';
+    document.getElementById('goalFat').value = g.fat||'';
+    openSheet(settingsSheet, bd2);
+  };
+  bd2.onclick = function(){ closeSheet(settingsSheet, bd2); };
+
+  document.getElementById('saveSettings').onclick = function(){
+    state.goals = {
+      cal:  +document.getElementById('goalCal').value || 0,
+      pro:  +document.getElementById('goalPro').value || 0,
+      carb: +document.getElementById('goalCarb').value || 0,
+      fat:  +document.getElementById('goalFat').value || 0
+    };
+    persist(); render(); closeSheet(settingsSheet, bd2);
+  };
+  document.getElementById('clearLog').onclick = function(){
+    if (confirm('Clear all meals logged today?')) { state.log = []; persist(); render(); closeSheet(settingsSheet, bd2); }
+  };
+
+  // ---- photo handling ----
+  var imageBase64 = null, imageMimeType = null;
+  var fileInput = document.getElementById('fileInput');
+  var preview = document.getElementById('preview');
+
+  document.getElementById('pickBtn').onclick = function(){ fileInput.click(); };
+  document.getElementById('retakeBtn').onclick = function(){ fileInput.click(); };
+
+  fileInput.onchange = function(){
+    var file = fileInput.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var dataUrl = reader.result;
+      imageMimeType = file.type || 'image/jpeg';
+      imageBase64 = dataUrl.split(',')[1];
+      preview.src = dataUrl;
+      preview.style.display = 'block';
+      document.getElementById('retakeBtn').style.display = 'block';
+      document.getElementById('picArea').style.display = 'none';
+      document.getElementById('analyzeBtn').disabled = false;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  function resetSnap(){
+    imageBase64 = null; imageMimeType = null;
+    preview.style.display = 'none';
+    document.getElementById('retakeBtn').style.display = 'none';
+    document.getElementById('picArea').style.display = 'block';
+    document.getElementById('weightInput').value = '';
+    document.getElementById('nameInput').value = '';
+    document.getElementById('extraInput').value = '';
+    document.getElementById('snapError').textContent = '';
+    document.getElementById('analyzeBtn').disabled = true;
+    fileInput.value = '';
+  }
+
+  // ---- analyze ----
+  document.getElementById('analyzeBtn').onclick = function(){
+    if (!imageBase64) return;
+    var btn = this;
+    var err = document.getElementById('snapError');
+    err.textContent = '';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>Analyzing…';
+
+    var payload = {
+      imageBase64: imageBase64,
+      imageMimeType: imageMimeType,
+      weight: document.getElementById('weightInput').value.trim(),
+      extra: document.getElementById('extraInput').value.trim()
+    };
+
+    fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function(r){ return r.json().then(function(d){ return {ok:r.ok, d:d}; }); })
+    .then(function(res){
+      if (!res.ok || res.d.error) { throw new Error(res.d.error || 'Something went wrong'); }
+      var d = res.d;
+      d.name = document.getElementById('nameInput').value.trim();
+      state.log.push(d);
+      persist(); render();
+      closeSheet(snapSheet, bd);
+      resetSnap();
+    })
+    .catch(function(e){ err.textContent = e.message || 'Something went wrong, try again'; })
+    .finally(function(){ btn.disabled = false; btn.textContent = 'Analyze'; });
+  };
+
+  render();
+</script>
+</body>
+</html>
