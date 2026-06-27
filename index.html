@@ -34,22 +34,6 @@
     .totals { margin-bottom: 0; position: sticky; top: 28px; }
     .macro .val { font-size: 22px; }
     .snapbtn { margin-bottom: 16px; }
-    /* sheets become centered modals instead of full-width bottom drawers */
-    .sheet { left: 50%; right: auto; bottom: auto; top: 50%;
-      transform: translate(-50%, -50%) scale(0.96); width: 560px; max-width: calc(100vw - 48px);
-      padding: 30px 36px; border-radius: 24px;
-      transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0; }
-    .sheet.open { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    .sheet h3 { font-size: 24px; margin-bottom: 6px; }
-    .sheet label { font-size: 15px; margin-top: 14px; }
-    .sheet input, .sheet textarea { padding: 13px; font-size: 16px; border-radius: 14px; }
-    .sheet textarea { min-height: 52px; }
-    .sheet .ghost { padding: 14px; font-size: 16px; }
-    .sheet .primary { padding: 15px; font-size: 18px; margin-top: 18px; }
-    .sheet .preview { max-height: 200px; }
-    .sheet .hint { margin-top: 6px; }
-    #settingsSheet { width: 560px; }
-    .grab { display: none; }
   }
   .logo span { color: var(--accent); }
   .iconbtn { background: var(--card); border: 1px solid var(--line); color: var(--text);
@@ -132,6 +116,27 @@
     color: var(--accent); border-radius: 12px; font-size: 13px; font-weight: 600;
     font-family: inherit; cursor: pointer; text-align: center; }
   .goalbanner:active { opacity: 0.8; }
+
+  /* desktop/iPad modal — placed last so it overrides the mobile bottom-sheet rules */
+  @media (min-width: 760px) {
+    .sheet { position: fixed; left: 50%; right: auto; top: 32px; bottom: auto;
+      width: 560px; max-width: calc(100vw - 48px); margin: 0;
+      padding: 30px 36px; border-radius: 24px;
+      max-height: calc(100vh - 64px); overflow-y: auto;
+      transform: translate(-50%, 0) scale(0.96); opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease; }
+    .sheet.open { transform: translate(-50%, 0) scale(1); opacity: 1; }
+    .sheet h3 { font-size: 24px; margin-bottom: 6px; }
+    .sheet label { font-size: 15px; margin-top: 14px; }
+    .sheet input, .sheet textarea { padding: 13px; font-size: 16px; border-radius: 14px; }
+    .sheet textarea { min-height: 52px; }
+    .sheet .ghost { padding: 14px; font-size: 16px; }
+    .sheet .primary { padding: 15px; font-size: 18px; margin-top: 18px; }
+    .sheet .preview { max-height: 200px; }
+    .sheet .hint { margin-top: 6px; }
+    #settingsSheet { width: 560px; }
+    .grab { display: none; }
+  }
 </style>
 </head>
 <body>
