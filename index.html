@@ -123,9 +123,9 @@
       width: 560px; max-width: calc(100vw - 48px); margin: 0;
       padding: 30px 36px; border-radius: 24px;
       max-height: calc(100vh - 64px); overflow-y: auto;
-      transform: translate(-50%, 0) scale(0.96); opacity: 0;
+      transform: translate(-50%, 0) scale(0.96); opacity: 0; pointer-events: none;
       transition: transform 0.2s ease, opacity 0.2s ease; }
-    .sheet.open { transform: translate(-50%, 0) scale(1); opacity: 1; }
+    .sheet.open { transform: translate(-50%, 0) scale(1); opacity: 1; pointer-events: auto; }
     .sheet h3 { font-size: 24px; margin-bottom: 6px; }
     .sheet label { font-size: 15px; margin-top: 14px; }
     .sheet input, .sheet textarea { padding: 13px; font-size: 16px; border-radius: 14px; }
