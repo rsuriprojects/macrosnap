@@ -36,16 +36,23 @@
     .snapbtn { margin-bottom: 16px; }
     /* sheets become centered modals instead of full-width bottom drawers */
     .sheet { left: 50%; right: auto; bottom: auto; top: 50%;
-      transform: translate(-50%, -50%) scale(0.96); width: 620px; max-width: calc(100vw - 48px);
-      padding: 32px 36px; border-radius: 24px;
+      transform: translate(-50%, -50%) scale(0.96); width: 820px; max-width: calc(100vw - 48px);
+      padding: 32px 40px; border-radius: 24px;
       transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0; }
     .sheet.open { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    .sheet h3 { font-size: 24px; margin-bottom: 18px; }
-    .sheet label { font-size: 15px; margin-top: 18px; }
-    .sheet input, .sheet textarea { padding: 15px; font-size: 17px; border-radius: 14px; }
-    .sheet .ghost { padding: 16px; font-size: 16px; }
-    .sheet .primary { padding: 17px; font-size: 18px; margin-top: 22px; }
-    .sheet .preview { max-height: 320px; }
+    .sheet h3 { font-size: 24px; margin-bottom: 6px; }
+    .sheet label { font-size: 15px; margin-top: 16px; }
+    .sheet input, .sheet textarea { padding: 14px; font-size: 16px; border-radius: 14px; }
+    .sheet .ghost { padding: 15px; font-size: 16px; }
+    .sheet .primary { padding: 16px; font-size: 18px; margin-top: 20px; }
+    .sheet .preview { max-height: 240px; }
+
+    /* two-column form so analyze button stays visible without scrolling */
+    #snapSheet .formgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+    #snapSheet .formgrid .col-left, #snapSheet .formgrid .col-right { min-width: 0; }
+    #snapSheet .col-right label:first-child { margin-top: 0; }
+    #snapSheet #extraInput { min-height: 150px; }
+    #settingsSheet { width: 560px; }
     .grab { display: none; }
   }
   .logo span { color: var(--accent); }
@@ -146,7 +153,7 @@
         <div class="macro carb"><div class="val" id="tCarb">0</div><div class="lbl">carbs</div><div class="goal" id="gCarb"></div><div class="bar"><span id="bCarb"></span></div></div>
         <div class="macro fat"><div class="val" id="tFat">0</div><div class="lbl">fat</div><div class="goal" id="gFat"></div><div class="bar"><span id="bFat"></span></div></div>
       </div>
-      <button class="goalbanner" id="goalBanner" style="display:none">&#127919; set your daily goals to track progress</button>
+      <button class="goalbanner" id="goalBanner" style="display:none">set your daily goals to track progress</button>
     </div>
 
     <div>
@@ -165,21 +172,27 @@
     <div class="grab"></div>
     <h3>add a meal</h3>
     <input type="file" accept="image/*" id="fileInput" style="display:none" />
-    <div id="picArea">
-      <button class="ghost" id="pickBtn">&#128247; take / choose photo</button>
+    <div class="formgrid">
+      <div class="col-left">
+        <div id="picArea">
+          <button class="ghost" id="pickBtn">take / choose photo</button>
+        </div>
+        <img class="preview" id="preview" style="display:none" />
+        <button class="ghost" id="retakeBtn" style="display:none">retake</button>
+
+        <label>grams <span style="color:var(--muted)">(optional — leave blank if a scale is in the photo)</span></label>
+        <input type="number" id="weightInput" inputmode="decimal" placeholder="e.g. 150" />
+        <div class="hint">if your plate sits on a kitchen scale, macrosnap will read the weight off the display.</div>
+      </div>
+
+      <div class="col-right">
+        <label>meal name</label>
+        <input type="text" id="nameInput" placeholder="breakfast" />
+
+        <label>extra details (optional)</label>
+        <textarea id="extraInput" placeholder="e.g. grilled, no oil, with skin"></textarea>
+      </div>
     </div>
-    <img class="preview" id="preview" style="display:none" />
-    <button class="ghost" id="retakeBtn" style="display:none">retake</button>
-
-    <label>grams <span style="color:var(--muted)">(optional — leave blank if a scale is in the photo)</span></label>
-    <input type="number" id="weightInput" inputmode="decimal" placeholder="e.g. 150" />
-    <div class="hint">if your plate sits on a kitchen scale, macrosnap will read the weight off the display.</div>
-
-    <label>meal name</label>
-    <input type="text" id="nameInput" placeholder="breakfast" />
-
-    <label>extra details (optional)</label>
-    <textarea id="extraInput" placeholder="e.g. grilled, no oil, with skin"></textarea>
 
     <div class="error" id="snapError"></div>
     <button class="primary" id="analyzeBtn" disabled>analyze</button>
@@ -364,7 +377,7 @@
     document.getElementById('analyzeBtn').style.display = 'block';
     document.getElementById('confirmArea').style.display = 'none';
     pendingResult = null;
-    Array.prototype.forEach.call(snapSheet.querySelectorAll('label, #weightInput, #nameInput, #extraInput, .hint'), function(el){ el.style.display = ''; });
+    snapSheet.querySelector('.formgrid').style.display = '';
     fileInput.value = '';
   }
 
@@ -374,11 +387,10 @@
   function showForm(){
     document.getElementById('confirmArea').style.display = 'none';
     document.getElementById('analyzeBtn').style.display = 'block';
+    snapSheet.querySelector('.formgrid').style.display = '';
     document.getElementById('picArea').style.display = imageBase64 ? 'none' : 'block';
     preview.style.display = imageBase64 ? 'block' : 'none';
     document.getElementById('retakeBtn').style.display = imageBase64 ? 'block' : 'none';
-    // re-show the input fields
-    Array.prototype.forEach.call(snapSheet.querySelectorAll('label, #weightInput, #nameInput, #extraInput, .hint'), function(el){ el.style.display = ''; });
   }
 
   function showConfirm(d){
@@ -390,8 +402,8 @@
     document.getElementById('confirmMacros').innerHTML =
       '<span class="c">' + Math.round(d.calories) + ' cal</span> · P ' +
       round(d.protein_g) + 'g · C ' + round(d.carbs_g) + 'g · F ' + round(d.fat_g) + 'g';
-    // hide the form bits, show confirm
-    Array.prototype.forEach.call(snapSheet.querySelectorAll('label, #weightInput, #nameInput, #extraInput, .hint, #picArea, .preview, #retakeBtn'), function(el){ el.style.display = 'none'; });
+    // hide the whole form, show confirm
+    snapSheet.querySelector('.formgrid').style.display = 'none';
     document.getElementById('analyzeBtn').style.display = 'none';
     document.getElementById('confirmArea').style.display = 'block';
   }
