@@ -23,7 +23,24 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   body { max-width: 520px; margin: 0 auto; padding: 16px 16px 120px; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; text-transform: lowercase; }
+
+  /* wider, website-style layout on iPad / desktop */
+  @media (min-width: 760px) {
+    body { max-width: 960px; padding: 28px 28px 80px; }
+    .logo { font-size: 30px; }
+    .iconbtn { width: 46px; height: 46px; font-size: 20px; }
+    .snapbtn { max-width: 320px; }
+    .layout { display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; align-items: start; }
+    .totals { margin-bottom: 0; position: sticky; top: 28px; }
+    .macro .val { font-size: 26px; }
+    /* sheets become centered modals instead of full-width bottom drawers */
+    .sheet { left: 50%; right: auto; bottom: auto; top: 50%;
+      transform: translate(-50%, -50%) scale(0.96); width: 460px; max-width: calc(100vw - 40px);
+      border-radius: 22px; transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0; }
+    .sheet.open { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    .grab { display: none; }
+  }
   .logo span { color: var(--accent); }
   .iconbtn { background: var(--card); border: 1px solid var(--line); color: var(--text);
     width: 40px; height: 40px; border-radius: 12px; font-size: 18px; cursor: pointer; }
@@ -96,64 +113,68 @@
     <button class="iconbtn" id="settingsBtn">&#9881;</button>
   </header>
 
-  <div class="totals">
-    <h2>Today</h2>
-    <div class="macrorow">
-      <div class="macro cal"><div class="val" id="tCal">0</div><div class="lbl">Calories</div><div class="goal" id="gCal"></div></div>
-      <div class="macro pro"><div class="val" id="tPro">0</div><div class="lbl">Protein</div><div class="goal" id="gPro"></div></div>
-      <div class="macro carb"><div class="val" id="tCarb">0</div><div class="lbl">Carbs</div><div class="goal" id="gCarb"></div></div>
-      <div class="macro fat"><div class="val" id="tFat">0</div><div class="lbl">Fat</div><div class="goal" id="gFat"></div></div>
+  <div class="layout">
+    <div class="totals">
+      <h2>today</h2>
+      <div class="macrorow">
+        <div class="macro cal"><div class="val" id="tCal">0</div><div class="lbl">calories</div><div class="goal" id="gCal"></div></div>
+        <div class="macro pro"><div class="val" id="tPro">0</div><div class="lbl">protein</div><div class="goal" id="gPro"></div></div>
+        <div class="macro carb"><div class="val" id="tCarb">0</div><div class="lbl">carbs</div><div class="goal" id="gCarb"></div></div>
+        <div class="macro fat"><div class="val" id="tFat">0</div><div class="lbl">fat</div><div class="goal" id="gFat"></div></div>
+      </div>
     </div>
-  </div>
 
-  <button class="snapbtn" id="snapBtn">&#128247; Snap a meal</button>
+    <div>
+      <button class="snapbtn" id="snapBtn">&#128247; snap a meal</button>
 
-  <div class="log">
-    <h2>Log</h2>
-    <div id="logList"></div>
+      <div class="log">
+        <h2>log</h2>
+        <div id="logList"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Snap sheet -->
   <div class="backdrop" id="backdrop"></div>
   <div class="sheet" id="snapSheet">
     <div class="grab"></div>
-    <h3>Add a meal</h3>
-    <input type="file" accept="image/*" capture="environment" id="fileInput" style="display:none" />
+    <h3>add a meal</h3>
+    <input type="file" accept="image/*" id="fileInput" style="display:none" />
     <div id="picArea">
-      <button class="ghost" id="pickBtn">&#128247; Take / choose photo</button>
+      <button class="ghost" id="pickBtn">&#128247; take / choose photo</button>
     </div>
     <img class="preview" id="preview" style="display:none" />
-    <button class="ghost" id="retakeBtn" style="display:none">Retake</button>
+    <button class="ghost" id="retakeBtn" style="display:none">retake</button>
 
-    <label>Grams <span style="color:var(--muted)">(optional — leave blank if a scale is in the photo)</span></label>
+    <label>grams <span style="color:var(--muted)">(optional — leave blank if a scale is in the photo)</span></label>
     <input type="number" id="weightInput" inputmode="decimal" placeholder="e.g. 150" />
-    <div class="hint">If your plate sits on a kitchen scale, MacroSnap will read the weight off the display.</div>
+    <div class="hint">if your plate sits on a kitchen scale, macrosnap will read the weight off the display.</div>
 
-    <label>Meal name</label>
-    <input type="text" id="nameInput" placeholder="Breakfast" />
+    <label>meal name</label>
+    <input type="text" id="nameInput" placeholder="breakfast" />
 
-    <label>Extra details (optional)</label>
+    <label>extra details (optional)</label>
     <textarea id="extraInput" placeholder="e.g. grilled, no oil, with skin"></textarea>
 
     <div class="error" id="snapError"></div>
-    <button class="primary" id="analyzeBtn" disabled>Analyze</button>
+    <button class="primary" id="analyzeBtn" disabled>analyze</button>
   </div>
 
   <!-- Settings sheet -->
   <div class="backdrop" id="backdrop2"></div>
   <div class="sheet" id="settingsSheet">
     <div class="grab"></div>
-    <h3>Daily goals</h3>
+    <h3>daily goals</h3>
     <div class="row2">
-      <div><label>Calories</label><input type="number" id="goalCal" placeholder="2000" /></div>
-      <div><label>Protein (g)</label><input type="number" id="goalPro" placeholder="150" /></div>
+      <div><label>calories</label><input type="number" id="goalCal" placeholder="2000" /></div>
+      <div><label>protein (g)</label><input type="number" id="goalPro" placeholder="150" /></div>
     </div>
     <div class="row2">
-      <div><label>Carbs (g)</label><input type="number" id="goalCarb" placeholder="200" /></div>
-      <div><label>Fat (g)</label><input type="number" id="goalFat" placeholder="65" /></div>
+      <div><label>carbs (g)</label><input type="number" id="goalCarb" placeholder="200" /></div>
+      <div><label>fat (g)</label><input type="number" id="goalFat" placeholder="65" /></div>
     </div>
-    <button class="primary" id="saveSettings">Save</button>
-    <button class="ghost" id="clearLog">Clear today's log</button>
+    <button class="primary" id="saveSettings">save</button>
+    <button class="ghost" id="clearLog">clear today's log</button>
   </div>
 
 <script>
@@ -193,7 +214,7 @@
 
     var list = document.getElementById('logList');
     if (!state.log.length) {
-      list.innerHTML = '<div class="empty">No meals logged yet today.<br>Tap “Snap a meal” to start.</div>';
+      list.innerHTML = '<div class="empty">no meals logged yet today.<br>tap “snap a meal” to start.</div>';
       return;
     }
     list.innerHTML = '';
