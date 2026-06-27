@@ -36,9 +36,16 @@
     .snapbtn { margin-bottom: 16px; }
     /* sheets become centered modals instead of full-width bottom drawers */
     .sheet { left: 50%; right: auto; bottom: auto; top: 50%;
-      transform: translate(-50%, -50%) scale(0.96); width: 460px; max-width: calc(100vw - 40px);
-      border-radius: 22px; transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0; }
+      transform: translate(-50%, -50%) scale(0.96); width: 620px; max-width: calc(100vw - 48px);
+      padding: 32px 36px; border-radius: 24px;
+      transition: transform 0.2s ease, opacity 0.2s ease; opacity: 0; }
     .sheet.open { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    .sheet h3 { font-size: 24px; margin-bottom: 18px; }
+    .sheet label { font-size: 15px; margin-top: 18px; }
+    .sheet input, .sheet textarea { padding: 15px; font-size: 17px; border-radius: 14px; }
+    .sheet .ghost { padding: 16px; font-size: 16px; }
+    .sheet .primary { padding: 17px; font-size: 18px; margin-top: 22px; }
+    .sheet .preview { max-height: 320px; }
     .grab { display: none; }
   }
   .logo span { color: var(--accent); }
@@ -117,6 +124,11 @@
   .confirmline b { color: var(--accent); }
   .confirmmacros { font-size: 13px; color: var(--muted); margin-top: 8px; }
   .confirmmacros .c { color: var(--cal); font-weight: 700; }
+  .goalbanner { display: block; width: 100%; margin-top: 14px; padding: 11px 12px;
+    background: rgba(91,140,255,0.12); border: 1px solid rgba(91,140,255,0.35);
+    color: var(--accent); border-radius: 12px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; text-align: center; }
+  .goalbanner:active { opacity: 0.8; }
 </style>
 </head>
 <body>
@@ -134,6 +146,7 @@
         <div class="macro carb"><div class="val" id="tCarb">0</div><div class="lbl">carbs</div><div class="goal" id="gCarb"></div><div class="bar"><span id="bCarb"></span></div></div>
         <div class="macro fat"><div class="val" id="tFat">0</div><div class="lbl">fat</div><div class="goal" id="gFat"></div><div class="bar"><span id="bFat"></span></div></div>
       </div>
+      <button class="goalbanner" id="goalBanner" style="display:none">&#127919; set your daily goals to track progress</button>
     </div>
 
     <div>
@@ -187,6 +200,7 @@
   <div class="sheet" id="settingsSheet">
     <div class="grab"></div>
     <h3>daily goals</h3>
+    <div class="hint" style="margin-top:-6px;margin-bottom:4px">set targets and macrosnap shows progress bars as you log meals.</div>
     <div class="row2">
       <div><label>calories</label><input type="number" id="goalCal" placeholder="2000" /></div>
       <div><label>protein (g)</label><input type="number" id="goalPro" placeholder="150" /></div>
@@ -243,6 +257,9 @@
     setBar('bCarb', t.carb, g.carb);
     setBar('bFat',  t.fat,  g.fat);
 
+    var noGoals = !(g.cal || g.pro || g.carb || g.fat);
+    document.getElementById('goalBanner').style.display = noGoals ? 'block' : 'none';
+
     var list = document.getElementById('logList');
     if (!state.log.length) {
       list.innerHTML = '<div class="empty">no meals logged yet today.<br>tap “snap a meal” to start.</div>';
@@ -284,14 +301,16 @@
 
   document.getElementById('snapBtn').onclick = function(){ resetSnap(); openSheet(snapSheet, bd); };
   bd.onclick = function(){ closeSheet(snapSheet, bd); };
-  document.getElementById('settingsBtn').onclick = function(){
+  function openSettings(){
     var g = state.goals;
     document.getElementById('goalCal').value = g.cal||'';
     document.getElementById('goalPro').value = g.pro||'';
     document.getElementById('goalCarb').value = g.carb||'';
     document.getElementById('goalFat').value = g.fat||'';
     openSheet(settingsSheet, bd2);
-  };
+  }
+  document.getElementById('settingsBtn').onclick = openSettings;
+  document.getElementById('goalBanner').onclick = openSettings;
   bd2.onclick = function(){ closeSheet(settingsSheet, bd2); };
 
   document.getElementById('saveSettings').onclick = function(){
